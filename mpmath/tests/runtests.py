@@ -36,6 +36,12 @@ if "-coverage" in sys.argv:
     sys.argv.remove('-coverage')
     coverage = True
 
+threads = 1
+if "-threads" in sys.argv:
+    arg_idx = sys.argv.index('-threads')
+    del sys.argv[arg_idx:arg_idx+2]
+    threads = int(sys.argv[arg_idx+1])
+
 if "-nogmpy" in sys.argv:
     sys.argv.remove('-nogmpy')
     os.environ['MPMATH_NOGMPY'] = 'Y'
@@ -104,28 +110,35 @@ def testit(importdir='', testdir=''):
                 break
             modules.append([priority, name, module])
         # execute tests
+        def runtest(f):
+            if f.startswith('test_'):
+                if coverage and ('numpy' in f):
+                    continue
+                sys.stdout.write("    " + f[5:].ljust(25) + " ")
+                t1 = clock()
+                try:
+                    module.__dict__[f]()
+                except:
+                    etype, evalue, trb = sys.exc_info()
+                    if etype in (KeyboardInterrupt, SystemExit):
+                        raise
+                    print("")
+                    print("TEST FAILED!")
+                    print("")
+                    traceback.print_exc()
+                t2 = clock()
+                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
+
         modules.sort()
         tstart = clock()
         for priority, name, module in modules:
             print(name)
-            for f in sorted(module.__dict__.keys()):
-                if f.startswith('test_'):
-                    if coverage and ('numpy' in f):
-                        continue
-                    sys.stdout.write("    " + f[5:].ljust(25) + " ")
-                    t1 = clock()
-                    try:
-                        module.__dict__[f]()
-                    except:
-                        etype, evalue, trb = sys.exc_info()
-                        if etype in (KeyboardInterrupt, SystemExit):
-                            raise
-                        print("")
-                        print("TEST FAILED!")
-                        print("")
-                        traceback.print_exc()
-                    t2 = clock()
-                    print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
+            if threads > 1:
+                from multiprocessing import Pool
+                with Pool(threads) as pool:
+                    pool.map(runtest, module.__dict__.keys())
+            else:
+                map(runtest, sorted(module.__dict__.keys()))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
