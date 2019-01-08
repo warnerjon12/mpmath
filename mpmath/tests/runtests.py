@@ -139,6 +139,7 @@ def testit(importdir='', testdir=''):
                 with Pool(threads) as pool:
                     pool.map(runtest, module.__dict__.values())
             else:
+                print(module.__dict__.values())
                 map(runtest, sorted(module.__dict__.values(), \
                                     key=lambda x: x[0]))
         tend = clock()
