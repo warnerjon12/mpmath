@@ -110,14 +110,15 @@ def testit(importdir='', testdir=''):
                 break
             modules.append([priority, name, module])
         # execute tests
-        def runtest(f):
+        def runtest(kv):
+            f, func = kv
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
                     return
                 sys.stdout.write("    " + f[5:].ljust(25) + " ")
                 t1 = clock()
                 try:
-                    module.__dict__[f]()
+                    func()
                 except:
                     etype, evalue, trb = sys.exc_info()
                     if etype in (KeyboardInterrupt, SystemExit):
@@ -136,9 +137,9 @@ def testit(importdir='', testdir=''):
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    pool.map(runtest, module.__dict__.keys())
+                    pool.map(runtest, module.__dict__.values())
             else:
-                map(runtest, sorted(module.__dict__.keys()))
+                map(runtest, sorted(module.__dict__.values()))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
