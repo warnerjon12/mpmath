@@ -138,15 +138,15 @@ def testit(importdir='', testdir=''):
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    pool.map(runtest, \
+                    pool.map(runtest, [\
                              (k, v, sys.stdout, sys.stderr) \
                              for k, v in sorted(module.__dict__.items(), \
-                                                key=lambda x: x[0]))
+                                                key=lambda x: x[0])])
             else:
-                map(runtest, \
+                map(runtest, [\
                     (k, v, sys.stdout, sys.stderr) \
                     for k, v in sorted(module.__dict__.items(), \
-                                       key=lambda x: x[0]))
+                                       key=lambda x: x[0])])
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
