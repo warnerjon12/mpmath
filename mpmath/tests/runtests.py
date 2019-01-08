@@ -113,7 +113,7 @@ def testit(importdir='', testdir=''):
         def runtest(f):
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
-                    continue
+                    return
                 sys.stdout.write("    " + f[5:].ljust(25) + " ")
                 t1 = clock()
                 try:
