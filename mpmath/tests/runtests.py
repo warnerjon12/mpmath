@@ -137,10 +137,9 @@ def testit(importdir='', testdir=''):
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    pool.map(runtest, module.__dict__.values())
+                    pool.map(runtest, module.__dict__.items())
             else:
-                print(module.__dict__.values())
-                map(runtest, sorted(module.__dict__.values(), \
+                map(runtest, sorted(module.__dict__.items(), \
                                     key=lambda x: x[0]))
         tend = clock()
         print("")
