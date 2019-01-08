@@ -110,12 +110,12 @@ def testit(importdir='', testdir=''):
                 break
             modules.append([priority, name, module])
         # execute tests
-        def runtest(kv):
-            f, func = kv
+        def runtest(kvoe):
+            f, func, stdout, stderr = kvoe
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
                     return
-                sys.stdout.write("    " + f[5:].ljust(25) + " ")
+                stdout.write("    " + f[5:].ljust(25) + " ")
                 t1 = clock()
                 try:
                     func()
@@ -123,12 +123,13 @@ def testit(importdir='', testdir=''):
                     etype, evalue, trb = sys.exc_info()
                     if etype in (KeyboardInterrupt, SystemExit):
                         raise
-                    print("")
-                    print("TEST FAILED!")
-                    print("")
-                    traceback.print_exc()
+                    print("", file=stdout)
+                    print("TEST FAILED!", file=stdout)
+                    print("", file=stdout)
+                    traceback.print_exc(file=stderr)
                 t2 = clock()
-                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
+                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s", \
+                      file=stdout)
 
         modules.sort()
         tstart = clock()
@@ -137,10 +138,15 @@ def testit(importdir='', testdir=''):
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    pool.map(runtest, module.__dict__.items())
+                    pool.map(runtest, \
+                             (k, v, sys.stdout, sys.stderr) \
+                             for k, v in sorted(module.__dict__.items(), \
+                                                key=lambda x: x[0]))
             else:
-                map(runtest, sorted(module.__dict__.items(), \
-                                    key=lambda x: x[0]))
+                map(runtest, \
+                    (k, v, sys.stdout, sys.stderr) \
+                    for k, v in sorted(module.__dict__.items(), \
+                                       key=lambda x: x[0]))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
