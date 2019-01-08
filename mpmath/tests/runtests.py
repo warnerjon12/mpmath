@@ -139,7 +139,8 @@ def testit(importdir='', testdir=''):
                 with Pool(threads) as pool:
                     pool.map(runtest, module.__dict__.values())
             else:
-                map(runtest, sorted(module.__dict__.values()))
+                map(runtest, sorted(module.__dict__.values(), \
+                                    key=lambda x: x[0]))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
