@@ -134,16 +134,14 @@ def testit(importdir='', testdir=''):
         tstart = clock()
         for priority, name, module in modules:
             print(name)
+            mapargs = (runtest, sorted(module.__dict__.items(), \
+                                       key=lambda x: x[0]))
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    for _ in pool.map(runtest, sorted(module.__dict__.items(), \
-                                                      key=lambda x: x[0])):
-                        pass
+                    pool.map(*mapargs)
             else:
-                for _ in map(runtest, sorted(module.__dict__.items(), \
-                                             key=lambda x: x[0])):
-                    pass
+                list(map(*mapargs))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
