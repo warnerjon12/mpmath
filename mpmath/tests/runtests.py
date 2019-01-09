@@ -110,12 +110,12 @@ def testit(importdir='', testdir=''):
                 break
             modules.append([priority, name, module])
         # execute tests
-        def runtest(kvoe):
-            f, func, stdout, stderr = kvoe
+        def runtest(kv):
+            f, func = kv
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
                     return
-                stdout.write("    " + f[5:].ljust(25) + " ")
+                sys.stdout.write("    " + f[5:].ljust(25) + " ")
                 t1 = clock()
                 try:
                     func()
@@ -123,13 +123,12 @@ def testit(importdir='', testdir=''):
                     etype, evalue, trb = sys.exc_info()
                     if etype in (KeyboardInterrupt, SystemExit):
                         raise
-                    print("", file=stdout)
-                    print("TEST FAILED!", file=stdout)
-                    print("", file=stdout)
-                    traceback.print_exc(file=stderr)
+                    print("")
+                    print("TEST FAILED!")
+                    print("")
+                    traceback.print_exc()
                 t2 = clock()
-                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s", \
-                      file=stdout)
+                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
 
         modules.sort()
         tstart = clock()
@@ -138,15 +137,13 @@ def testit(importdir='', testdir=''):
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    pool.map(runtest, [\
-                             (k, v, sys.stdout, sys.stderr) \
-                             for k, v in sorted(module.__dict__.items(), \
-                                                key=lambda x: x[0])])
+                    for _ in pool.map(runtest, sorted(module.__dict__.items(), \
+                                                      key=lambda x: x[0])):
+                        pass
             else:
-                map(runtest, [\
-                    (k, v, sys.stdout, sys.stderr) \
-                    for k, v in sorted(module.__dict__.items(), \
-                                       key=lambda x: x[0])])
+                for _ in map(runtest, sorted(module.__dict__.items(), \
+                                             key=lambda x: x[0])):
+                    pass
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
