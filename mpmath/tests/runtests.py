@@ -109,13 +109,16 @@ def testit(importdir='', testdir=''):
                 modules = [[priority, name, module]]
                 break
             modules.append([priority, name, module])
+
+        stdout = sys.stdout
+        stderr = sys.stderr
         # execute tests
         def runtest(kv):
             f, func = kv
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
                     return
-                sys.stdout.write("    " + f[5:].ljust(25) + " ")
+                stdout.write("    " + f[5:].ljust(25) + " ")
                 t1 = clock()
                 try:
                     func()
@@ -123,12 +126,13 @@ def testit(importdir='', testdir=''):
                     etype, evalue, trb = sys.exc_info()
                     if etype in (KeyboardInterrupt, SystemExit):
                         raise
-                    print("")
-                    print("TEST FAILED!")
-                    print("")
-                    traceback.print_exc()
+                    print("", file=stdout)
+                    print("TEST FAILED!", file=stdout)
+                    print("", file=stdout)
+                    traceback.print_exc(file=stderr)
                 t2 = clock()
-                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
+                print("ok " + "       " + ("%.7f" % (t2-t1)) + " s", \
+                      file=stdout)
 
         modules.sort()
         tstart = clock()
