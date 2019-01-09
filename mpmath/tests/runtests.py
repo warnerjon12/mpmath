@@ -110,11 +110,9 @@ def testit(importdir='', testdir=''):
                 break
             modules.append([priority, name, module])
 
-        stdout = sys.stdout
-        stderr = sys.stderr
         # execute tests
-        def runtest(kv):
-            f, func = kv
+        def runtest(kvoe):
+            f, func, stdout, stderr = kvoe
             if f.startswith('test_'):
                 if coverage and ('numpy' in f):
                     return
@@ -138,8 +136,9 @@ def testit(importdir='', testdir=''):
         tstart = clock()
         for priority, name, module in modules:
             print(name)
-            mapargs = (runtest, sorted(module.__dict__.items(), \
-                                       key=lambda x: x[0]))
+            mapargs = (runtest, [(k, v, sys.stdout, sys.stderr) \
+                                 for k, v in sorted(module.__dict__.items(), \
+                                                    key=lambda x: x[0])])
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
