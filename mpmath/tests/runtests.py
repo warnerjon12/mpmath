@@ -60,6 +60,28 @@ else:
 # TODO: add a flag for this
 testdir = ''
 
+from timeit import default_timer as clock
+
+def runtest(name_func):
+    name, func = name_func
+    if name.startswith('test_'):
+        if coverage and ('numpy' in name):
+            return
+        sys.stdout.write("    " + name[5:].ljust(25) + " ")
+        t1 = clock()
+        try:
+            func()
+        except:
+            etype, evalue, trb = sys.exc_info()
+            if etype in (KeyboardInterrupt, SystemExit):
+                raise
+            print("")
+            print("TEST FAILED!")
+            print("")
+            traceback.print_exc()
+        t2 = clock()
+        print("ok " + "       " + ("%.7f" % (t2-t1)) + " s")
+
 def testit(importdir='', testdir=''):
     """Run all tests in testdir while importing from importdir."""
     if importdir:
@@ -80,7 +102,6 @@ def testit(importdir='', testdir=''):
         py.test.cmdline.main()
     else:
         import glob
-        from timeit import default_timer as clock
         modules = []
         args = sys.argv[1:]
         # search for tests in directory of this file if not otherwise specified
@@ -111,49 +132,18 @@ def testit(importdir='', testdir=''):
             modules.append([priority, name, module])
 
         # execute tests
-        def runtest(name_func):
-            name, func = name_func
-            if name.startswith('test_'):
-                if coverage and ('numpy' in name):
-                    return ('', '')
-                try:
-                    from StringIO import StringIO
-                except ImportError:
-                    from io import StringIO
-                with StringIO() as stdout, StringIO() as stderr:
-                    stdout.write("    " + name[5:].ljust(25) + " ")
-                    t1 = clock()
-                    try:
-                        func()
-                    except:
-                        etype, evalue, trb = sys.exc_info()
-                        if etype in (KeyboardInterrupt, SystemExit):
-                            raise
-                        print("", file=stdout)
-                        print("TEST FAILED!", file=stdout)
-                        print("", file=stdout)
-                        traceback.print_exc(file=stderr)
-                    t2 = clock()
-                    print("ok " + "       " + ("%.7f" % (t2-t1)) + " s", \
-                          file=stdout)
-                    return (stdout.getvalue(), stderr.getvalue())
-
         modules.sort()
         tstart = clock()
         for priority, name, module in modules:
             print(name)
             mapargs = (runtest, sorted(module.__dict__.items(), \
-                                                    key=lambda x: x[0]))
-            toprint = None
+                                       key=lambda x: x[0]))
             if threads > 1:
                 from multiprocessing import Pool
                 with Pool(threads) as pool:
-                    toprint = pool.map(*mapargs)
+                    pool.map(*mapargs)
             else:
-                toprint = map(*mapargs)
-            for stdout, stderr in toprint:
-                sys.stdout.write(stdout)
-                sys.stderr.write(stderr)
+                list(map(*mapargs))
         tend = clock()
         print("")
         print("finished tests in " + ("%.2f" % (tend-tstart)) + " seconds")
