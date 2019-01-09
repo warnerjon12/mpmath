@@ -39,8 +39,8 @@ if "-coverage" in sys.argv:
 threads = 1
 if "-threads" in sys.argv:
     arg_idx = sys.argv.index('-threads')
-    del sys.argv[arg_idx:arg_idx+2]
     threads = int(sys.argv[arg_idx+1])
+    del sys.argv[arg_idx:arg_idx+2]
 
 if "-nogmpy" in sys.argv:
     sys.argv.remove('-nogmpy')
